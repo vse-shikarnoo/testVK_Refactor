@@ -52,11 +52,15 @@ class UserListFragment : Fragment() {
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                feature?.viewStateFlow?.collect {
-                    renderState(it)
+                launch{
+                    feature?.viewStateFlow?.collect {
+                        renderState(it)
+                    }
                 }
-                queryView?.asFlow()?.collect {
-                    feature?.submitAction(UserListAction.QueryChanged(it))
+                launch{
+                    queryView?.asFlow()?.collect {
+                        feature?.submitAction(UserListAction.QueryChanged(it))
+                    }
                 }
             }
         }
