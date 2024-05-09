@@ -6,7 +6,9 @@ import androidx.recyclerview.widget.RecyclerView.Adapter
 import com.vk.usersapp.R
 import com.vk.usersapp.feature.feed.model.User
 
-class UserListAdapter : Adapter<UserListItemVh>() {
+class UserListAdapter(
+    private val onClick: (position: Int) -> Unit
+) : Adapter<UserListItemVh>() {
 
     private val dataset: MutableList<User> = mutableListOf()
 
@@ -16,9 +18,11 @@ class UserListAdapter : Adapter<UserListItemVh>() {
         notifyDataSetChanged()
     }
 
+    fun getUser(position: Int) = dataset[position]
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UserListItemVh {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.vh_user, parent, false)
-        return UserListItemVh(view)
+        return UserListItemVh(view, onClick)
     }
 
     override fun onBindViewHolder(holder: UserListItemVh, position: Int) {
