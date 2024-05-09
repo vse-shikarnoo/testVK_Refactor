@@ -8,11 +8,11 @@ import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.core.view.isVisible
-import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.vk.usersapp.R
@@ -21,12 +21,19 @@ import com.vk.usersapp.core.asFlow
 import com.vk.usersapp.feature.feed.presentation.UserListAction
 import com.vk.usersapp.feature.feed.presentation.UserListFeature
 import com.vk.usersapp.feature.feed.presentation.UserListViewState
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class UserListFragment : Fragment() {
 
-    val adapter: UserListAdapter by lazy { UserListAdapter() }
+    val adapter: UserListAdapter by lazy {
+        UserListAdapter {
+            findNavController().navigate(
+                UserListFragmentDirections.actionUserListFragmentToDetailUserFragment(
+                    adapter.getUser(it)
+                )
+            )
+        }
+    }
     var recycler: RecyclerView? = null
     var queryView: EditText? = null
     var errorView: TextView? = null
@@ -34,8 +41,13 @@ class UserListFragment : Fragment() {
 
     var feature: UserListFeature? = null
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return LayoutInflater.from(requireContext()).inflate(R.layout.fr_user_list, container, false)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        return LayoutInflater.from(requireContext())
+            .inflate(R.layout.fr_user_list, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -51,12 +63,16 @@ class UserListFragment : Fragment() {
         }
 
         lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                feature?.viewStateFlow?.collect {
-                    renderState(it)
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    feature?.viewStateFlow?.collect {
+                        renderState(it)
+                    }
                 }
-                queryView?.asFlow()?.collect {
-                    feature?.submitAction(UserListAction.QueryChanged(it))
+                launch {
+                    queryView?.asFlow()?.collect {
+                        feature?.submitAction(UserListAction.QueryChanged(it))
+                    }
                 }
             }
         }
@@ -81,6 +97,7 @@ class UserListFragment : Fragment() {
                 loaderView?.isVisible = false
                 recycler?.isVisible = false
             }
+
             is UserListViewState.List -> {
                 loaderView?.isVisible = false
                 if (viewState.itemsList.isEmpty()) {
@@ -93,6 +110,7 @@ class UserListFragment : Fragment() {
                     adapter.setUsers(viewState.itemsList)
                 }
             }
+
             UserListViewState.Loading -> {
                 errorView?.isVisible = false
                 loaderView?.isVisible = true

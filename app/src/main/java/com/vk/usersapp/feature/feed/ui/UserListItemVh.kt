@@ -8,7 +8,16 @@ import com.bumptech.glide.Glide
 import com.vk.usersapp.R
 import com.vk.usersapp.feature.feed.model.User
 
-class UserListItemVh(view: View) : RecyclerView.ViewHolder(view) {
+class UserListItemVh(
+    view: View,
+    private val onClick: (position: Int) -> Unit
+) : RecyclerView.ViewHolder(view) {
+
+    init {
+        view.setOnClickListener {
+            onClick(adapterPosition)
+        }
+    }
 
     private val avatar: ImageView = view.findViewById(R.id.photo)
     private val title: TextView = view.findViewById(R.id.title)
